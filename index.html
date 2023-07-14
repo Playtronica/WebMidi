@@ -1,0 +1,394 @@
+<html lang="ru">
+<head>
+<title>PL_LOGGER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style type="text/css">
+        .output {
+            height: 200px;
+            overflow: auto;
+            margin-bottom: 24px;
+        }
+
+.rod-wrapper {
+  position: relative;
+  border: 3px solid #eee;
+  margin: 2px;
+  padding: 2px;
+  text-align: center;
+  max-width: 20px;
+}
+
+input[type="range"].range {
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical;
+  // -webkit-appearance: none;
+  // width: auto;
+  max-width: 100%;
+  // width: 100% !important;
+  // border: 1px solid red;
+  cursor: pointer;
+  z-index: 200;
+}
+
+input[type="range"].range:focus {
+  // border: 0 !important;
+  outline: 0 !important;
+}
+
+input[type="range"].range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: #ff9900;
+  background-image: -webkit-gradient(
+    linear,
+    0 0,
+    0 100%,
+    from(#4ddbff),
+    to(#0cf)
+  );
+  background-image: -webkit-linear-gradient(right, #4ddbff, #0cf);
+}
+
+input[type="range"].round {
+  border-radius: 20px;
+}
+
+input[type="range"].round::-webkit-slider-thumb {
+  border-radius: 5px;
+}
+
+       
+    </style>
+</head>
+<body class="m-2">
+<h1 class="text-center">Logger for Playtronica devices</h1>
+  <div class="container">
+    <div class="form-floating mb-3">
+      <select id="device" class="form-control"></select>
+      <label for="device">Select device</label>
+    </div>
+    <details class="mb-1">
+        <summary>Help Info</summary>
+        <table class="text-center w-100"> 
+        <tbody>
+            <tr><th> Command </th><th> Dec </th><th> Meaning </th><th> # parameters </th><th> param 1 </th><th> param 2</th></tr>
+            <tr><td>0x<font size="+1"><b>8</b></font>0 </td><td> 128 </td><td> Note-off </td><td> 2 </td><td> key </td><td> velocity </td></tr>
+            <tr><td>0x<font size="+1"><b>9</b></font>0 </td><td> 144 </td><td> Note-on </td><td> 2 </td><td> key </td><td> velocity </td></tr>
+            <tr><td>0x<font size="+1"><b>A</b></font>0 </td><td> 160 </td><td> Aftertouch</td><td> 2 </td><td> key </td><td> touch</td></tr>
+            <tr><td>0x<font size="+1"><b>B</b></font>0 </td><td> 176 </td><td> Continuous controller (CC) </td><td> 2 </td><td> controller # </td><td> controller value </td></tr>
+            <tr><td>0x<font size="+1"><b>C</b></font>0 </td><td> 192 </td><td> Patch change </td><td> 2 </td><td> instrument # </td><td> </td></tr>
+            <tr><td>0x<font size="+1"><b>D</b></font>0 </td><td> 208 </td><td> Channel Pressure </td><td> 1 </td><td> pressure </td></tr>
+            <tr><td>0x<font size="+1"><b>E</b></font>0 </td><td> 224 </td><td> Pitch bend </td><td> 2 </td><td> lsb (7 bits) </td><td> msb (7 bits)</td></tr>
+            <tr><td>0x<font size="+1"><b>F</b></font>0 </td><td> 240 </td><td> (non-musical commands)</td><td>   </td><td> </td><td> </td></tr>
+        </tbody>
+        </table>
+    </details>
+    
+    <div class="btn-group mb-3" style="width: 100%" role="group" aria-label="Basic example">
+      <button type="button" id="rawBut" class="btn btn-primary">Raw</button>
+      <button type="button" id="sysExBut" class="btn btn-primary">Sys ex</button>
+      <button type="button" id="CCBut" class="btn btn-primary">CC</button>
+    </div>
+    
+    <div style="display: none" class="form-floating mb-3" id="RawCommandDiv">
+      <input id="rawCommand" class="form-control" type="text">
+      <label for="rawCommand">Raw Command Line</label>
+      <button id="submit1" class="btn btn-primary" style="width: 70%">Send</button> 
+    </div>
+    
+    <div style="display: none" class="form-floating mb-3" id="SysExDiv">
+      <input id="SysExCommand" class="form-control" type="text">
+      <label for="SysExCommand">Sys ex Line</label>
+      <button id="submit2" class="btn btn-primary" style="width: 70%">Send</button>
+    </div>
+    
+    <div style="display: none" class="row justify-content-center text-center" id="CCDiv">
+        <div class="col-3 m-1 p-3" id="CC-1" style="border: solid; border-radius: 10%">
+        <output class="row justify-content-center">0</output>    
+        <input type="range" min="0" max="127" value="0" oninput="this.previousElementSibling.value = this.value" class=" range vertical round vertical-highest-first" />
+        <div class="form-floating mb-3">
+            <input id="СС-1-Command" class="form-control" type="number" min="-1" max="127" value="-1">
+            <label for="СС-1-Command">Command</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input id="СС-1-Сhannel" class="form-control" type="number" min='0' max="15" value="0">
+            <label for="СС-1-Сhannel">Channel</label>
+        </div>
+        </div>
+        <div class="col-3 m-1 p-3" id="CC-2" style="border: solid; border-radius: 10%">
+        <output class="row justify-content-center">0</output>
+        <input type="range" min="0" max="127" value="0" oninput="this.previousElementSibling.value = this.value" class=" range vertical round vertical-highest-first" />
+        <div class="form-floating mb-3">
+            <input id="СС-2-Command" class="form-control" type="number" min="-1" max="127" value="-1">
+            <label for="СС-2-Command">Command</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input id="СС-2-Сhannel" class="form-control" type="number" min='0' max="15" value="0">
+            <label for="СС-2-Сhannel">Channel</label>
+        </div>
+        </div>
+        <div class="col-3 m-1 p-3" id="CC-3" style="border: solid; border-radius: 10%">
+        <output class="row justify-content-center">0</output>
+        <input type="range" min="0" max="127" value="0" oninput="this.previousElementSibling.value = this.value" class=" range vertical round vertical-highest-first" />
+        <div class="form-floating mb-3">
+            <input id="СС-3-Command" class="form-control" type="number" min="-1" max="127" value="-1">
+            <label for="СС-3-Command">Command</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input id="СС-3-Сhannel" class="form-control" type="number" min='0' max="15" value="0">
+            <label for="СС-3-Сhannel">Channel</label>
+        </div>
+        </div>
+       <div class="col-3 m-1 p-3" id="CC-4" style="border: solid; border-radius: 10%">
+        <output class="row justify-content-center">0</output>
+        <input type="range" min="0" max="127" value="0" oninput="this.previousElementSibling.value = this.value" class=" range vertical round vertical-highest-first" />
+        <div class="form-floating mb-3">
+            <input id="СС-4-Command" class="form-control" type="number" min="-1" max="127" value="-1">
+            <label for="СС-4-Command">Command</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input id="СС-4-Сhannel" class="form-control" type="number" min='0' max="15" value="0">
+            <label for="СС-4-Сhannel">Channel</label>
+        </div>
+        </div>
+        <div class="col-3 m-1 p-3" id="CC-5" style="border: solid; border-radius: 10%">
+        <output class="row justify-content-center">0</output>
+        <input type="range" min="0" max="127" value="0" oninput="this.previousElementSibling.value = this.value" class=" range vertical round vertical-highest-first" />
+        <div class="form-floating mb-3">
+            <input id="СС-5-Command" class="form-control" type="number" min="-1" max="127" value="-1">
+            <label for="СС-5-Command">Command</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input id="СС-5-Сhannel" class="form-control" type="number" min='0' max="15" value="0">
+            <label for="СС-5-Сhannel">Channel</label>
+        </div>
+        </div>
+        <div class="col-3 m-1 p-3" id="CC-6" style="border: solid; border-radius: 10%">
+        <output class="row justify-content-center">0</output>
+        <input type="range" min="0" max="127" value="0" oninput="this.previousElementSibling.value = this.value" class=" range vertical round vertical-highest-first" />
+        <div class="form-floating mb-3">
+            <input id="СС-6-Command" class="form-control" type="number" min="-1" max="127" value="-1">
+            <label for="СС-6-Command">Command</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input id="СС-6-Сhannel" class="form-control" type="number" min='0' max="15" value="0">
+            <label for="СС-6-Сhannel">Channel</label>
+        </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="col">
+            <p class="output" id="comOutput"></p>
+        </div>
+    </div>
+  </div>
+</body>
+</html>
+
+<script>
+
+let midiIn = [];
+let midiOut = [];
+let notesOn = new Map(); 
+
+connect();
+
+function connect() {
+    navigator.requestMIDIAccess({sysex: true})
+  .then(
+        (midi) => midiReady(midi),
+        (err) => console.log('Something went wrong', err));
+}
+
+function midiReady(midi) {
+    // Also react to device changes.
+    midi.addEventListener('statechange', (event) => initDevices(event.target));
+    initDevices(midi);
+}
+
+function initDevices(midi) {
+    // Reset.
+    midiIn = [];
+    midiOut = [];
+
+    // MIDI devices that send you data.
+    const inputs = midi.inputs.values();
+    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+        midiIn.push(input.value);
+    }
+
+    // MIDI devices that you send data to.
+    const outputs = midi.outputs.values();
+    for (let output = outputs.next(); output && !output.done; output = outputs.next()) {
+        midiOut.push(output.value);
+    }
+
+    displayDevices();
+    startListening();
+}
+
+function displayDevices() {
+    let device = document.getElementById("device")
+    device.innerHTML = "";
+    let i = 0;
+    for (let output of midiOut) {
+        let newOption = new Option(output.name, i.toString());
+        i++;
+        device.add(newOption);
+    }
+}
+
+function startListening() {
+    // Start listening to MIDI messages.
+    for (const input of midiIn) {
+        input.addEventListener('midimessage', midiMessageReceived)
+    }
+}
+
+let dict = {144: "NOTE ON", 128: "NOTE OFF", 224: "PITCH"}
+let sysExOut = document.getElementById("sysExOutput")
+let comOut = document.getElementById("comOutput")
+function midiMessageReceived(midiMessage) {
+    let midiSysExMsg = midiMessage.data;
+//        console.log(midiMessage);
+
+    let res = ""
+    let k
+    for (let item of midiSysExMsg) {
+        k = parseInt(item);
+        for (let i = 0; i < 16; i++) {
+            if ((k - i) in dict) {
+                k = "CHANNEL " + (i + 1).toString() + " " +dict[k - i]
+                break
+            }
+
+        }
+        res = res + " " + k.toString();
+    }
+    
+//    console.log(midiMessage.currentTarget.name)
+    
+    comOut.innerHTML += midiMessage.currentTarget.name + " -> " + res + "<br>"
+    comOut.scrollTop = comOut.scrollHeight
+}
+
+let lastTime = new Date().getTime();
+function sendMidiMessage() {
+    if (new Date().getTime() - lastTime < 500) {
+        return;
+    }
+    lastTime = new Date().getTime();
+    const device = midiOut[document.getElementById("device").value];
+    let msgOn = [];
+    if (document.getElementById("RawCommandDiv").style.display === "flex") {
+        document.getElementById("rawCommand").value.split(" ").forEach(x => msgOn.push(parseInt(x)));
+    }
+    if (document.getElementById("SysExDiv").style.display === "flex") {
+        msgOn.push(240)
+        msgOn.push(20)
+        msgOn.push(13)
+        document.getElementById("SysExCommand").value.split(" ").forEach(x => msgOn.push(parseInt(x)));
+        msgOn.push(247)
+    }
+    
+    console.log(msgOn);
+    // First send the note on;
+    device.send(msgOn);
+}
+
+
+document.getElementById("submit1").addEventListener("click", () => sendMidiMessage());
+document.getElementById("submit2").addEventListener("click", () => sendMidiMessage());
+
+document.addEventListener( 'keyup', event => {
+    if( event.code === 'Enter' ) document.getElementById("submit1").click()})
+
+document.getElementById("rawBut").addEventListener("click", () => {
+    document.getElementById("RawCommandDiv").style.display = "flex"
+    document.getElementById("CCDiv").style.display = "none"
+    document.getElementById("SysExDiv").style.display = "none"
+})
+
+document.getElementById("sysExBut").addEventListener("click", () => {
+    document.getElementById("RawCommandDiv").style.display = "none"
+    document.getElementById("CCDiv").style.display = "none"
+    document.getElementById("SysExDiv").style.display = "flex"
+})
+
+document.getElementById("CCBut").addEventListener("click", () => {
+    document.getElementById("RawCommandDiv").style.display = "none"
+    document.getElementById("CCDiv").style.display = "flex"
+    document.getElementById("SysExDiv").style.display = "none"
+})
+
+document.getElementById("CC-1").children[1].addEventListener("change", (x) => {
+    if (document.getElementById("СС-1-Command").value !== "-1") {
+        const msgOn = []
+        msgOn.push(176 + parseInt(document.getElementById("СС-1-Сhannel").value))
+        msgOn.push(parseInt(document.getElementById("СС-1-Command").value))
+        msgOn.push(parseInt(document.getElementById("CC-1").children[1].value))
+        const device = midiOut[document.getElementById("device").value];
+        console.log(msgOn);
+        device.send(msgOn);
+    }
+})
+
+document.getElementById("CC-2").children[1].addEventListener("change", (x) => {
+    if (document.getElementById("СС-2-Command").value !== "-1") {
+        const msgOn = []
+        msgOn.push(176 + parseInt(document.getElementById("СС-2-Сhannel").value))
+        msgOn.push(parseInt(document.getElementById("СС-2-Command").value))
+        msgOn.push(parseInt(document.getElementById("CC-2").children[1].value))
+        const device = midiOut[document.getElementById("device").value];
+        console.log(msgOn);
+        device.send(msgOn);
+    }
+})
+document.getElementById("CC-3").children[1].addEventListener("change", (x) => {
+    if (document.getElementById("СС-3-Command").value !== "-1") {
+        const msgOn = []
+        msgOn.push(176 + parseInt(document.getElementById("СС-3-Сhannel").value))
+        msgOn.push(parseInt(document.getElementById("СС-3-Command").value))
+        msgOn.push(parseInt(document.getElementById("CC-3").children[1].value))
+        const device = midiOut[document.getElementById("device").value];
+        console.log(msgOn);
+        device.send(msgOn);
+    }
+})
+document.getElementById("CC-4").children[1].addEventListener("change", (x) => {
+    if (document.getElementById("СС-4-Command").value !== "-1") {
+        const msgOn = []
+        msgOn.push(176 + parseInt(document.getElementById("СС-4-Сhannel").value))
+        msgOn.push(parseInt(document.getElementById("СС-4-Command").value))
+        msgOn.push(parseInt(document.getElementById("CC-4").children[1].value))
+        const device = midiOut[document.getElementById("device").value];
+        console.log(msgOn);
+        device.send(msgOn);
+    }
+})
+document.getElementById("CC-5").children[1].addEventListener("change", (x) => {
+    if (document.getElementById("СС-5-Command").value !== "-1") {
+        const msgOn = []
+        msgOn.push(176 + parseInt(document.getElementById("СС-5-Сhannel").value))
+        msgOn.push(parseInt(document.getElementById("СС-5-Command").value))
+        msgOn.push(parseInt(document.getElementById("CC-5").children[1].value))
+        const device = midiOut[document.getElementById("device").value];
+        console.log(msgOn);
+        device.send(msgOn);
+    }
+})
+document.getElementById("CC-6").children[1].addEventListener("change", (x) => {
+    if (document.getElementById("СС-6-Command").value !== "-1") {
+        const msgOn = []
+        msgOn.push(176 + parseInt(document.getElementById("СС-6-Сhannel").value))
+        msgOn.push(parseInt(document.getElementById("СС-6-Command").value))
+        msgOn.push(parseInt(document.getElementById("CC-6").children[1].value))
+        const device = midiOut[document.getElementById("device").value];
+        console.log(msgOn);
+        device.send(msgOn);
+    }
+}) 
+
+</script>
