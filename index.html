@@ -203,23 +203,23 @@ function connect() {
 }
 
 function midiReady(midi) {
-    // Also react to device changes.
+
     midi.addEventListener('statechange', (event) => initDevices(event.target));
     initDevices(midi);
 }
 
 function initDevices(midi) {
-    // Reset.
+
     midiIn = [];
     midiOut = [];
 
-    // MIDI devices that send you data.
+
     const inputs = midi.inputs.values();
     for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
         midiIn.push(input.value);
     }
 
-    // MIDI devices that you send data to.
+
     const outputs = midi.outputs.values();
     for (let output = outputs.next(); output && !output.done; output = outputs.next()) {
         midiOut.push(output.value);
@@ -241,7 +241,6 @@ function displayDevices() {
 }
 
 function startListening() {
-    // Start listening to MIDI messages.
     for (const input of midiIn) {
         input.addEventListener('midimessage', midiMessageReceived)
     }
@@ -252,23 +251,29 @@ let sysExOut = document.getElementById("sysExOutput")
 let comOut = document.getElementById("comOutput")
 function midiMessageReceived(midiMessage) {
     let midiSysExMsg = midiMessage.data;
-//        console.log(midiMessage);
+
 
     let res = ""
     let k
-    for (let item of midiSysExMsg) {
-        k = parseInt(item);
-        for (let i = 0; i < 16; i++) {
-            if ((k - i) in dict) {
-                k = "CHANNEL " + (i + 1).toString() + " " +dict[k - i]
-                break
-            }
 
-        }
-        res = res + " " + k.toString();
+    if (midiSysExMsg[0] == 240) {
+        res = (midiSysExMsg[3] * 127 * 127) + (midiSysExMsg[4] * 127) + midiSysExMsg[5];
     }
-    
-//    console.log(midiMessage.currentTarget.name)
+    else {
+        for (let item of midiSysExMsg) {
+            k = parseInt(item);
+            for (let i = 0; i < 16; i++) {
+                if ((k - i) in dict) {
+                    k = "CHANNEL " + (i + 1).toString() + " " +dict[k - i]
+                    break
+                }
+
+            }
+            res = res + " " + k.toString();
+        }
+    }
+
+
     
     comOut.innerHTML += midiMessage.currentTarget.name + " -> " + res + "<br>"
     comOut.scrollTop = comOut.scrollHeight
@@ -294,7 +299,6 @@ function sendMidiMessage() {
     }
     
     console.log(msgOn);
-    // First send the note on;
     device.send(msgOn);
 }
 
